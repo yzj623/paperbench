@@ -1,0 +1,11 @@
+pyproject.toml
+nanoeval_alcatraz/__init__.py
+nanoeval_alcatraz/alcatraz_computer_interface.py
+nanoeval_alcatraz/py.typed
+nanoeval_alcatraz/task_to_alcatraz_config.py
+nanoeval_alcatraz.egg-info/PKG-INFO
+nanoeval_alcatraz.egg-info/SOURCES.txt
+nanoeval_alcatraz.egg-info/dependency_links.txt
+nanoeval_alcatraz.egg-info/requires.txt
+nanoeval_alcatraz.egg-info/top_level.txt
+tests/test_nanoeval_alcatraz.py

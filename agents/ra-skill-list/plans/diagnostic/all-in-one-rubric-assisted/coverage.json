@@ -1,0 +1,831 @@
+{
+  "kind": "human-authored rubric-assisted diagnostic; not a blind benchmark result",
+  "paper_id": "all-in-one",
+  "input_sha256": {
+    "PaperBench-Experiments/all-in-one/2026-09-15T02-55-50Z/agent-run/research_agent/plan.json": "99a0560b4ae9846ce81915bc54b31e293fe5d6ee0129e086d51b704e8747c68d",
+    "PaperBench-Official/project/paperbench/data/papers/all-in-one/paper.md": "4dc3ecabd26f0dce90405a010f194a192089980dd504ccb928e22c03344a7bf9",
+    "PaperBench-Official/project/paperbench/data/papers/all-in-one/paper.pdf": "ff29e390806a0d4ed76613f6386ffc9e7324706c56206880eee34dd2a13045c2",
+    "PaperBench-Official/project/paperbench/data/papers/all-in-one/addendum.md": "ebe0d30d2364caa20ddaaf4f0322eb1fa5639df21eb845bfcd86db4e3b5ba90b",
+    "PaperBench-Official/project/paperbench/data/papers/all-in-one/rubric.json": "ce727a07d70eb7c9729f19b7ae203d07be63bb5f51fa3ab9a361fb7da3921002",
+    "PaperBench-Official/project/paperbench/paperbench/instructions/code_only_instructions.txt": "f874d301846524770d5676a52e160378a9535c782c11ba18a7e51aaaf879b535",
+    "PaperBench-Official/project/paperbench/data/papers/all-in-one/assets/asset_4.jpg": "8827af122142eaba7f175fe3418976ca7f122a99e8d24881fe0c3d21c2aa581b",
+    "PaperBench-Official/project/paperbench/data/papers/all-in-one/assets/asset_6.jpg": "aa53be907083fe7462500dbb06de8eb8381a3b11186f27bb505b56ecd60e6cc2",
+    "PaperBench-Official/project/paperbench/data/papers/all-in-one/assets/asset_12.jpg": "615fda56373e840f9c45df1e718e5d77f14325875130d0afa020cc338ab52ba2"
+  },
+  "scope_amendments": {
+    "task_002": " Diagnostic clarification: use the SDE conventions and consistent perturbation/score units specified in the checklist; time embedding is implemented by task_003. No training or full sampling run is required at this stage.",
+    "task_003": " Diagnostic dimensional convention: diffusion time uses 128 sampled frequencies and concatenated sine/cosine features of width 256 before each block projection. This is a disclosed rubric-assisted choice where the printed paper says 128-dimensional; metadata Fourier features are separately width 128 before projection. Token width is 50, while each of four attention heads has Q/K/V width 10.",
+    "task_007": " Scope completion: include HMM as a sixth benchmark, exact joint log-density/conditional interfaces, and the distinct N-chain reference protocols for Two Moons, SLCP, Tree and HMM. Use the dimensionally consistent task/mask definitions and disclosed source-error resolutions in the checklist. Implement the samplers; do not generate large reference datasets during Code-Dev approval.",
+    "task_013": " Code-Dev scope: implement runnable experiment orchestration and result collection, without requiring experiments to execute now. Figure 4(b) includes Two Moons, SLCP, Tree and HMM and 100 random conditional/joint queries per task. Figures 4(a,b) use 1,000/10,000/100,000 simulations. Execution success and reported numeric results are not approval conditions.",
+    "task_014": " Code-Dev scope: implement the full experiment without running it now. The 100,000-simulation model supplies the two illustrative cases; the quantitative Figure 5(c) sweep additionally uses 1,000/10,000/100,000 simulations and dense/undirected/directed masks. Predictions include a uniform 0-to-15 time grid. Dense attention is used for the illustrative cases.",
+    "task_015": " Code-Dev scope: implement these workflows without running training or inference now. Use dense attention and eight layers. Implement both Figure 6 conditions; use four beta(t) observations plus one deceased-population observation for panel (b), following the figure caption rather than the conflicting infected-population sentence. Grid queries span 0 to 40; expose irregular query times too.",
+    "task_016": " Code-Dev scope: implement both unconstrained and energy-guided inference and both predictive routes, without running experiments now or requiring their reported outcomes. Use dense attention and eight layers. Guidance must use the full denoised-score/self-recurrence procedure. The energy threshold is derived from the unconstrained energy posterior predictive and is also explicitly configurable.",
+    "task_017": " Code-Dev scope: inspect the complete executable workflow and scientific configurations; training, large simulations, MCMC and generation of final figures are not required during approval. Inspect saved-result plotting code and data provenance rather than demanding empirical agreement with the paper."
+  },
+  "task_count": 17,
+  "checklist_count": 93,
+  "task_checklist_counts": {
+    "task_001": 2,
+    "task_002": 7,
+    "task_003": 6,
+    "task_004": 7,
+    "task_005": 6,
+    "task_006": 5,
+    "task_007": 13,
+    "task_008": 4,
+    "task_009": 5,
+    "task_010": 7,
+    "task_011": 4,
+    "task_012": 6,
+    "task_013": 4,
+    "task_014": 4,
+    "task_015": 4,
+    "task_016": 5,
+    "task_017": 4
+  },
+  "schema_valid": true,
+  "all_quotes_exact_substrings": true,
+  "codedev_leaf_count": 92,
+  "mapped_codedev_leaf_count": 92,
+  "unmapped_codedev_leaf_ids": [],
+  "coverage_meaning": "Manual correspondence, not measured semantic recall or an assurance of grader acceptance. See AUDIT.md for conflicts and rubric-derived details.",
+  "coverage": [
+    {
+      "rubric_id": "0ac16f05-bdb9-48c8-9103-764068f5301a",
+      "requirement": "The drift term for Variance Exploding SDE is defined as $f(x, t)=0$",
+      "checklist_ids": [
+        "task_002_check_001"
+      ]
+    },
+    {
+      "rubric_id": "1402caf0-ee17-48a4-b0f5-ee4523807747",
+      "requirement": "The diffusion term for Variance Exploding SDE is defined as $g(t)=\\sigma_{min} \\cdot (\\frac{\\sigma_{max}}{\\sigma_{min}})^t \\cdot \\sqrt{2 \\log \\frac{\\sigma_{max}}{\\sigma_{min}}}$",
+      "checklist_ids": [
+        "task_002_check_001"
+      ]
+    },
+    {
+      "rubric_id": "396c0b27-9d8c-49d4-a9e8-667b7c1a9e5c",
+      "requirement": "The perturbation kernel for the Variance Exploding SDE is defined as $p(x_t|x_0) = \\mathcal{N}(x_t, x_t, \\sigma(t)I)$ where $\\sigma(t) = \\sigma_{min}^2\\left( \\frac{\\sigma_{max}}{\\sigma_{min}} \\right)^{2t}$",
+      "checklist_ids": [
+        "task_002_check_002"
+      ]
+    },
+    {
+      "rubric_id": "07f7aac1-c623-46e0-b7cc-3991331cbd9c",
+      "requirement": "The constant $\\sigma_{max}$ for VESDE is set to 15",
+      "checklist_ids": [
+        "task_002_check_001"
+      ]
+    },
+    {
+      "rubric_id": "c6cd56ae-e565-4512-978e-80a8afaae037",
+      "requirement": "The constant $\\sigma_{min}$ for VESDE is set to 0.0001",
+      "checklist_ids": [
+        "task_002_check_001"
+      ]
+    },
+    {
+      "rubric_id": "ac3759f1-14f6-4859-a64f-84db470eb2db",
+      "requirement": "In VESDE, samples are drawn from the time interval [1e-5, 1]",
+      "checklist_ids": [
+        "task_002_check_003"
+      ]
+    },
+    {
+      "rubric_id": "437abe9f-4b33-4293-9c64-d9cf83fd2a55",
+      "requirement": "Each unique variable has an integer identifier. Multiple observations of the same variable share the same identifier",
+      "checklist_ids": [
+        "task_004_check_001"
+      ]
+    },
+    {
+      "rubric_id": "714bdd7e-b21c-4407-aa3d-f50307633bb4",
+      "requirement": "The tokenizer uses learnable vector embeddings to embed each identifier",
+      "checklist_ids": [
+        "task_004_check_001"
+      ]
+    },
+    {
+      "rubric_id": "af5cd308-83c7-4b2b-bc9f-b006183ea3ed",
+      "requirement": "The embedding for a single value is created by repeating the scalar value to match the desired dimensionality. For example, to embed the value 1 to desired dimensionality N, we would have a vector [1, 1, ...., 1] of length N",
+      "checklist_ids": [
+        "task_004_check_002"
+      ]
+    },
+    {
+      "rubric_id": "2e46fc8d-2ecb-46f3-86b1-0c80fceec733",
+      "requirement": "The tokenizer correctly tokenizes and embeds the metadata (if required); the tokenizer applies a learnable linear mapping of a random Fourier embedding of the elements in the index set to the desired dimensionality.",
+      "checklist_ids": [
+        "task_004_check_003"
+      ]
+    },
+    {
+      "rubric_id": "2ff0a481-00b4-47e9-939a-4dd7f7a00361",
+      "requirement": "The tokenizer uses learnable vector embeddings to embed each value in a condition state - \"True\" values are mapped to a shared learnable vector embedding, whereas \"False\" values are mapped to zeros (of the desired dimensionality)",
+      "checklist_ids": [
+        "task_004_check_004"
+      ]
+    },
+    {
+      "rubric_id": "407dcc3b-5f84-48b4-b5e5-730336b97fbe",
+      "requirement": "For each input, the tokenizer concatenates the embeddings of the identifier, value, metadata (if used), and condition state in that order",
+      "checklist_ids": [
+        "task_004_check_005"
+      ]
+    },
+    {
+      "rubric_id": "c6eb15a5-65f9-4ac9-9927-f50f3118d8fe",
+      "requirement": "The tokenizer takes inputs: a sequence of scalar values, a sequence of integer variable identifiers, a condition mask $M_C$, and optional metadata if required. It embeds these inputs into a sequence of tokens, each of equal dimensionality",
+      "checklist_ids": [
+        "task_004_check_005"
+      ]
+    },
+    {
+      "rubric_id": "09008e24-26e7-4aa9-8d9a-881feb20538f",
+      "requirement": "The Simformer model is a slightly modified vanilla encoder-only transformer following the implementation proposed by (Vaswani et al., 2017). The only modification is that the decoder is a single linear layer that produces a single scalar score for each variable token in the input sequence. The Simformer model is described in Section 3, Figure 2, and Appendix A.1",
+      "checklist_ids": [
+        "task_003_check_001"
+      ]
+    },
+    {
+      "rubric_id": "b1b80f04-e17c-49f6-831c-3cd3d15acf26",
+      "requirement": "Diffusion time is embedded as a random Gaussian Fourier embedding, and a linear projection of diffusion time is added to the output of each feed-forward block in the transformer",
+      "checklist_ids": [
+        "task_003_check_005"
+      ]
+    },
+    {
+      "rubric_id": "25eecc1a-cc2c-48e5-addc-082fdb7f638b",
+      "requirement": "The Simformer takes inputs: the diffusion time $t$, a sequence of tokens from the tokenizer, and an attention mask. These are projected to a sequence of scalar outputs, representing the marginal scores of the diffusion process at time $t$.",
+      "checklist_ids": [
+        "task_003_check_001"
+      ]
+    },
+    {
+      "rubric_id": "be65afa3-69f8-4f5a-8b0a-a2f7895b0b85",
+      "requirement": "During training, for each training sample, the condition mask $M_C$ is randomly sampled as either 1) the joint distribution, where $M_C=[0, 0, ..., 0]$, 2) the posterior distribution where data variables are observed and parameters are unobserved, 3) the likelihood function where data variables are unobserved and parameter variables are observed, 4) a Bernoulli distribution with p=0.3 (resampled for each element), 5) a Bernoulli distribution with p=0.7 (resampled for each element)",
+      "checklist_ids": [
+        "task_004_check_006",
+        "task_012_check_001"
+      ]
+    },
+    {
+      "rubric_id": "3e515973-3a59-46ca-b0b6-be1d8b4fea96",
+      "requirement": "$M_E$ is selected to be undirected, directed, or fully dense",
+      "checklist_ids": [
+        "task_003_check_006",
+        "task_005_check_004"
+      ]
+    },
+    {
+      "rubric_id": "8e07cc4f-6176-4391-a8bb-578831aa3aa4",
+      "requirement": "If $M_E$ is selected to be fully dense, every token is allowed to attend to every other token",
+      "checklist_ids": [
+        "task_003_check_006"
+      ]
+    },
+    {
+      "rubric_id": "08a90ef1-cf86-4bfa-b17a-9269e223a57e",
+      "requirement": "For both undirected and directed cases, the attention mask $M_E$ is computed to capture the known dependencies of the current task. Specifically, each task provides $M_E$ as given by the adjacency matrix of a directed/undirected graphical model with the diagonal set to True.",
+      "checklist_ids": [
+        "task_003_check_006",
+        "task_005_check_005",
+        "task_005_check_006"
+      ]
+    },
+    {
+      "rubric_id": "6f05f0cf-c61a-4ad9-b2b0-a353b7cab492",
+      "requirement": "If $M_E$ is directed it must be updated for a given $M_C$. The algorithm proposed by Webb at al. (2018) is used to add the minimal number of edges required to represent additional dependencies from conditioning as specified in $M_C$",
+      "checklist_ids": [
+        "task_005_check_001",
+        "task_005_check_002",
+        "task_005_check_003",
+        "task_005_check_004"
+      ]
+    },
+    {
+      "rubric_id": "34b6fc70-d083-4bef-986e-336b09845a3c",
+      "requirement": "When training the Simformer, for each training sample $\\hat{x}_0$, the noise level $t$ is sampled in the range [1e-5, 1] to generate a (partially) noisy sample $\\hat{\\mathbf{x}}_t^{M_C} = (1 - M_C) \\cdot \\hat{\\mathbf{x}}_t + M_C \\cdot \\hat{\\mathbf{x}}_0$ i.e. variables that we want to condition on remain clean.",
+      "checklist_ids": [
+        "task_002_check_003",
+        "task_012_check_001",
+        "task_012_check_002"
+      ]
+    },
+    {
+      "rubric_id": "0e335268-1035-4b34-b99c-97054665db5c",
+      "requirement": "A diffusion model loss is used that targets (un)conditional marginal score $\\nabla_{\\mathbf{x}_t^{\\text{unobserved}}}\\,\\log p_t(\\mathbf{x}_t^{\\text{unobserved}} \\mid \\mathbf{x}^{\\text{observed}})$ as defined by the condition mask $M_C$ and p(x).",
+      "checklist_ids": [
+        "task_002_check_005",
+        "task_012_check_002"
+      ]
+    },
+    {
+      "rubric_id": "b3e915ef-1f57-4b70-b3da-546947d6c1b5",
+      "requirement": "As defined in Section 3.3, for each (partially) noisy training sample $\\hat{x}_t^{M_c}$, the Simformer loss is defined as: $\\ell(\\phi, M_C, t, \\hat{\\mathbf{x}}_0, \\hat{\\mathbf{x}}_t) = (1-M_C)\\cdot \\left(s_\\phi^{M_E}(\\hat{\\mathbf{x}}_t^{M_C}, t) - \\nabla_{\\hat{\\mathbf{x}}_t} \\log p_t(\\hat{\\mathbf{x}}_t|\\hat{\\mathbf{x}}_0)\\right)$, where $s_\\phi^{M_E}$ denotes the score model equipped with a specific attention mask $M_E$",
+      "checklist_ids": [
+        "task_002_check_005",
+        "task_012_check_002"
+      ]
+    },
+    {
+      "rubric_id": "e3cd228e-467b-4c47-a23d-6e212249115e",
+      "requirement": "The Simformer loss is only computed over samples that are unobserved, i.e., they have a value of 0 in $M_C$",
+      "checklist_ids": [
+        "task_002_check_005",
+        "task_012_check_002"
+      ]
+    },
+    {
+      "rubric_id": "2cb4d86f-19c4-438f-b6f1-52c588ba9d09",
+      "requirement": "The total Simformer loss per mini-match is given by a weighted sum, as given by a positive weighting function $\\lambda(t)$ e.g. $\\lambda(t)=g(t)^2$ where $g(t)$ is the diffusion coefficient of the VESDE.",
+      "checklist_ids": [
+        "task_002_check_005",
+        "task_012_check_002"
+      ]
+    },
+    {
+      "rubric_id": "79df6718-c5e7-4967-92b0-4a66d1e8998e",
+      "requirement": "When performing inference using Simformer, the reverse diffusion process is run on all unobserved variables. Observed variables are kept constant at their initial values",
+      "checklist_ids": [
+        "task_002_check_007",
+        "task_012_check_004"
+      ]
+    },
+    {
+      "rubric_id": "7c953e3a-a3ec-4c91-a897-c6691ed60a80",
+      "requirement": "Euler-Maruyama discretization has been implemented to run the diffusion process backward for Simformer",
+      "checklist_ids": [
+        "task_002_check_006",
+        "task_012_check_004"
+      ]
+    },
+    {
+      "rubric_id": "23d6d4c9-f750-4f5d-8965-b9c2277d5c6a",
+      "requirement": "500 steps are used in the Euler-Maruyama discretization process for Simformer",
+      "checklist_ids": [
+        "task_002_check_006",
+        "task_012_check_004"
+      ]
+    },
+    {
+      "rubric_id": "386472cc-f299-4e46-89c9-95e9b9a4addf",
+      "requirement": "For conditioning on intervals, the self-recurrence is implemented such that a mutable hyperparameter $r$ specifies how many times future points undergo a forward diffusion step followed by a reverse step, incrementally refining each sample.",
+      "checklist_ids": [
+        "task_006_check_004"
+      ]
+    },
+    {
+      "rubric_id": "39362fd2-1f41-4f81-97ec-ce3c1e893502",
+      "requirement": "For conditioning on intervals, the constraint function is defined as $c(\\hat{x}) = \\hat{x} - u$, where $u$ is a mutable hyperparameter",
+      "checklist_ids": [
+        "task_006_check_001"
+      ]
+    },
+    {
+      "rubric_id": "091fd46a-e09e-4989-986b-2a14ba8b6e25",
+      "requirement": "For conditioning on intervals, the scaling function $s(t)$ is defined as $s(t)=\\frac{1}{\\sigma(t)^2)|$, i.e., inversely proportional to the variance",
+      "checklist_ids": [
+        "task_006_check_003"
+      ]
+    },
+    {
+      "rubric_id": "58d5bd8c-e8c0-41d7-aa31-684e0e0ddc61",
+      "requirement": "Algorithm 1 has been fully implemented to sample from conditions specified by the constraint function.",
+      "checklist_ids": [
+        "task_006_check_002",
+        "task_006_check_003",
+        "task_006_check_004",
+        "task_006_check_005"
+      ]
+    },
+    {
+      "rubric_id": "f5b9aa3e-f51e-4071-ad3c-fa381e0c060b",
+      "requirement": "Conditioning on intervals can optionally be used when sampling",
+      "checklist_ids": [
+        "task_006_check_001",
+        "task_006_check_005"
+      ]
+    },
+    {
+      "rubric_id": "ad5f1aac-30cc-425c-bc8a-409a58a71447",
+      "requirement": "The sbi library (Tejero-Cantero et al., 2020) is used to implement NPE, NRE, and NLE. Default parameters from the library are used, aside from using a more expressive neural spine flow for NPE and NLE",
+      "checklist_ids": [
+        "task_011_check_001"
+      ]
+    },
+    {
+      "rubric_id": "ee41ea7c-8c0f-4f87-95cc-a1f2258596a6",
+      "requirement": "Each method NPE, NRE, and NLE is trained using the provided training loop (e.g. sbi.SNPE().train())",
+      "checklist_ids": [
+        "task_011_check_002"
+      ]
+    },
+    {
+      "rubric_id": "31ed240f-4e9c-489b-89ae-6ed46a85e8d8",
+      "requirement": "Each method NPE, NRE and NLE uses a batch size of 1000",
+      "checklist_ids": [
+        "task_011_check_002"
+      ]
+    },
+    {
+      "rubric_id": "6a1ddafa-29df-4e46-bc3e-71236a0b7d76",
+      "requirement": "Each method NPE, NRE and NLE uses the Adam optimizer",
+      "checklist_ids": [
+        "task_011_check_002"
+      ]
+    },
+    {
+      "rubric_id": "56dcd071-8f39-4131-97cd-f6d011e99cf5",
+      "requirement": "Early stopping is used to stop training early depending on validation loss",
+      "checklist_ids": [
+        "task_011_check_003"
+      ]
+    },
+    {
+      "rubric_id": "23688299-d3fa-43ed-be9f-2fa2b2c40fa4",
+      "requirement": "The tasks Gaussian Linear, Gaussian Mixture, Two Moons, and SLCP are available such that synthetic data can be sampled from each task",
+      "checklist_ids": [
+        "task_007_check_001",
+        "task_007_check_002",
+        "task_007_check_003",
+        "task_007_check_004"
+      ]
+    },
+    {
+      "rubric_id": "9fa888e9-7fb0-4a65-8322-e26c7a021143",
+      "requirement": "N Markov chains with samples are initialized from the joint distribuiton",
+      "checklist_ids": [
+        "task_007_check_008"
+      ]
+    },
+    {
+      "rubric_id": "ed3ab4fa-52b1-4328-8d90-988292d02e8f",
+      "requirement": "1000 steps of a random direction slice sampling algorithm are run",
+      "checklist_ids": [
+        "task_007_check_009",
+        "task_007_check_010"
+      ]
+    },
+    {
+      "rubric_id": "e4d0c4d5-593a-432a-b5f7-6216655ab5f5",
+      "requirement": "An additional 3000 steps of Metropolis-Hastings Markov Chain Monte Carlo (MHMCMC) are run with step size of 0.01",
+      "checklist_ids": [
+        "task_007_check_010"
+      ]
+    },
+    {
+      "rubric_id": "92486973-e7a9-4da9-8a38-556e3bae3dd9",
+      "requirement": "Only the last samples of each chain are considered, yielding N reference samples",
+      "checklist_ids": [
+        "task_007_check_013"
+      ]
+    },
+    {
+      "rubric_id": "af3a4299-578a-4cdd-abb6-021e5c1f5c7d",
+      "requirement": "N Markov chains with samples are initialized from the joint distribuiton",
+      "checklist_ids": [
+        "task_007_check_008"
+      ]
+    },
+    {
+      "rubric_id": "028a6cbe-387e-456d-941c-0c4a4b970dd5",
+      "requirement": "600 steps of a random direction slice sampling algorithm are run",
+      "checklist_ids": [
+        "task_007_check_009",
+        "task_007_check_011"
+      ]
+    },
+    {
+      "rubric_id": "1e941abb-e1d9-4f91-958c-db60dad4c82e",
+      "requirement": "An additional 2000 steps of Metropolis-Hastings Markov Chain Monte Carlo (MHMCMC) are run with step size of 0.1",
+      "checklist_ids": [
+        "task_007_check_011"
+      ]
+    },
+    {
+      "rubric_id": "0051bf87-8706-4531-9b1d-00bbb499d8e4",
+      "requirement": "Only the last samples of each chain are considered, yielding N reference samples",
+      "checklist_ids": [
+        "task_007_check_013"
+      ]
+    },
+    {
+      "rubric_id": "1f652a29-c4c5-4d71-a7e5-9071b6a7da18",
+      "requirement": "The Tree task is available such that synthetic data can be sampled",
+      "checklist_ids": [
+        "task_007_check_005"
+      ]
+    },
+    {
+      "rubric_id": "acc664bc-89fb-4b2d-8813-330dc6a109b7",
+      "requirement": "N Markov chains with samples are initialized from the joint distribution",
+      "checklist_ids": [
+        "task_007_check_008"
+      ]
+    },
+    {
+      "rubric_id": "35e0a7bf-ddf7-429e-a1e3-a298bffcc301",
+      "requirement": "5000 steps of a HMC sampler is run",
+      "checklist_ids": [
+        "task_007_check_012"
+      ]
+    },
+    {
+      "rubric_id": "462ad866-65cb-4e08-bbd4-83dd471d9358",
+      "requirement": "Only the last samples of each chain are considered, yielding N reference samples",
+      "checklist_ids": [
+        "task_007_check_013"
+      ]
+    },
+    {
+      "rubric_id": "6fc3436c-8304-4955-801b-0e35528e425d",
+      "requirement": "The HMM task is available such that synthetic data can be sampled",
+      "checklist_ids": [
+        "task_007_check_006"
+      ]
+    },
+    {
+      "rubric_id": "52f952b5-752a-4f30-9b53-edd0a3543361",
+      "requirement": "N Markov chains with samples are initialized from the joint distribution",
+      "checklist_ids": [
+        "task_007_check_008"
+      ]
+    },
+    {
+      "rubric_id": "293a5a7e-aa99-420c-9af6-9c47e07bedb3",
+      "requirement": "5000 steps of a HMC sampler is run",
+      "checklist_ids": [
+        "task_007_check_012"
+      ]
+    },
+    {
+      "rubric_id": "bc5f359e-8302-4a9d-a617-6e3312aea9cc",
+      "requirement": "Only the last samples of each chain are considered, yielding N reference samples",
+      "checklist_ids": [
+        "task_007_check_013"
+      ]
+    },
+    {
+      "rubric_id": "9f70a4e5-0896-4778-814a-1a3dee705854",
+      "requirement": "The Lotka Volterra task is available such that synthetic data can be sampled",
+      "checklist_ids": [
+        "task_008_check_001",
+        "task_008_check_002"
+      ]
+    },
+    {
+      "rubric_id": "bcf546a2-f0a7-42e5-9956-3bc18b67483a",
+      "requirement": "For Lotka-Volterra, inference is performed for the full time-series and the implementation doesn't rely on summary statistics.",
+      "checklist_ids": [
+        "task_008_check_002"
+      ]
+    },
+    {
+      "rubric_id": "efe8edda-ebfa-4363-b13a-28bcb3d95ae3",
+      "requirement": "In the Lotka Volterra task, to each simulation, Gaussian observation noise is added with $\\sigma=0.1$",
+      "checklist_ids": [
+        "task_008_check_002"
+      ]
+    },
+    {
+      "rubric_id": "b96b17cd-fe54-4a06-9c95-5883018d631e",
+      "requirement": "The SIRD task is available such that synthetic data can be sampled",
+      "checklist_ids": [
+        "task_009_check_001",
+        "task_009_check_005"
+      ]
+    },
+    {
+      "rubric_id": "6c80714a-4f4e-4cae-9792-9fff064e4e5f",
+      "requirement": "In the SIRD task, a uniform prior is imposed on the global variables $\\gamma, \\delta$ denoted as $\\gamma, \\delta \\sim \\text{Unif}(0, 0.5)$",
+      "checklist_ids": [
+        "task_009_check_002"
+      ]
+    },
+    {
+      "rubric_id": "22bc638a-ddbe-40f5-9de2-4436b28f62bf",
+      "requirement": "In the SIRD task, for the time-dependent contact rate, $\\hat{\\beta} \\sim \\mathcal{G}(0, k)$ is first sampled from a gaussian prior with $k$ representing an RBF kernel defined as $k(t_1, t_2) = 2.5^2 \\exp\\left(-\\frac{1}{2} \\frac{\\|t_1 - t_2\\|^2}{7^2}\\right)$, then is transformed via a sigmoid function",
+      "checklist_ids": [
+        "task_009_check_003"
+      ]
+    },
+    {
+      "rubric_id": "4332dc3c-76d7-4b84-b317-35e82990b266",
+      "requirement": "In the SIRD task, the contact rate is implemented to vary over time, whereas the recovery and death rate are constant in time.",
+      "checklist_ids": [
+        "task_009_check_001",
+        "task_009_check_003"
+      ]
+    },
+    {
+      "rubric_id": "19f4319f-3056-4264-8fe4-3b4d13fe7a27",
+      "requirement": "In the SIRD task, observational data is modeled with log-normal noise with a mean of $S(t)$ and a standard deviation of $\\sigma=0.05$",
+      "checklist_ids": [
+        "task_009_check_004"
+      ]
+    },
+    {
+      "rubric_id": "64541d71-1b37-49be-9a3a-69bf786b3427",
+      "requirement": "The Hodgkin-Huxley task is available such that synthetic data can be sampled",
+      "checklist_ids": [
+        "task_010_check_001",
+        "task_010_check_003"
+      ]
+    },
+    {
+      "rubric_id": "4884d911-0bd8-4a99-a4a5-2721b7185072",
+      "requirement": "In the Hodgkin-Huxley task, the initial membrane voltage is established at $V_0=-65.0mV$",
+      "checklist_ids": [
+        "task_010_check_001"
+      ]
+    },
+    {
+      "rubric_id": "548511a5-0bfe-451b-8c1d-3b2ecc5693bd",
+      "requirement": "In the Hodgkin-Huxley task, simulations are conducted over a duration of 200ms",
+      "checklist_ids": [
+        "task_010_check_001"
+      ]
+    },
+    {
+      "rubric_id": "688df55a-5c45-4a79-8f1f-0aff770d4167",
+      "requirement": "In the Hodgkin-Huxley task, an input current of 4mA is applied in the interval between 50ms and 150ms",
+      "checklist_ids": [
+        "task_010_check_001"
+      ]
+    },
+    {
+      "rubric_id": "57d03e3d-386c-4163-9945-428714362bfd",
+      "requirement": "In the Hodgkin-Huxley task, the rate functions as defined following the equations in A2.2",
+      "checklist_ids": [
+        "task_010_check_002"
+      ]
+    },
+    {
+      "rubric_id": "5b2d5ce9-207a-47a0-8304-81c6bad86a69",
+      "requirement": "In the Hodgkin-Huxley task, energy consumption is computed based on sodium charge, converted into $\\mu J/s$",
+      "checklist_ids": [
+        "task_010_check_003",
+        "task_010_check_005",
+        "task_010_check_006",
+        "task_010_check_007"
+      ]
+    },
+    {
+      "rubric_id": "e2719676-7dc5-4fdd-a38a-eeadc6f81b27",
+      "requirement": "In the Hodgkin-Huxley task, for observational data, the summary features are: spike count, resting potential mean, resting potential std, spiking window mean, and centered and standardizes moments up to 4th order",
+      "checklist_ids": [
+        "task_010_check_004"
+      ]
+    },
+    {
+      "rubric_id": "0b14bb53-e680-4ca6-a662-819ecd08cb16",
+      "requirement": "In the Hodgkin-Huxley task, the simulator-generated noisy time series is reduced to the correct summary statistics",
+      "checklist_ids": [
+        "task_010_check_004"
+      ]
+    },
+    {
+      "rubric_id": "d342c64a-005d-44f8-88af-5d650c363011",
+      "requirement": "In the Hodgkin-Huxley task, the metabolic cost consumed by the circuit is recorded and and added as an additional statistic",
+      "checklist_ids": [
+        "task_010_check_007"
+      ]
+    },
+    {
+      "rubric_id": "3957cfb9-2e44-4026-be71-7d87d2c91583",
+      "requirement": "Given inputs X and Y, the classifier-based two-sample test accuracy between X and Y is measured as the 5-fold cross-validation score",
+      "checklist_ids": [
+        "task_012_check_005"
+      ]
+    },
+    {
+      "rubric_id": "982f7456-e34d-40be-a4a9-76c32826d301",
+      "requirement": "The classifier is a random forest classifier with 100 trees",
+      "checklist_ids": [
+        "task_012_check_005"
+      ]
+    },
+    {
+      "rubric_id": "973db5a3-21f4-48d0-8853-a5047626a637",
+      "requirement": "A score of 0.5 signifies perfect alignment with the ground truth posterior, and 1.0 indicates that a classifier can completely distinguish between the approximation and the ground truth",
+      "checklist_ids": [
+        "task_012_check_006"
+      ]
+    },
+    {
+      "rubric_id": "cdf1bfdd-53dd-420a-83f6-0a110ba9d765",
+      "requirement": "All Simformers have a token dimension of 50",
+      "checklist_ids": [
+        "task_003_check_002"
+      ]
+    },
+    {
+      "rubric_id": "e9edc2a0-3809-4e69-b9b6-1686b2955aa9",
+      "requirement": "All Simformers have 4 heads",
+      "checklist_ids": [
+        "task_003_check_002"
+      ]
+    },
+    {
+      "rubric_id": "32e4ef3f-9fdc-4845-a2ac-7c988141c039",
+      "requirement": "In all Simformers, the dimensionality of the key, query and value is 10",
+      "checklist_ids": [
+        "task_003_check_002"
+      ]
+    },
+    {
+      "rubric_id": "da87d682-3f30-443c-b318-8bb158048285",
+      "requirement": "In all Simformers, the random Gaussian Fourier embedding used in the tokenizer to embed metadata objects has 128 dimensions (if required)",
+      "checklist_ids": [
+        "task_004_check_003"
+      ]
+    },
+    {
+      "rubric_id": "5963d717-2765-4535-80d8-8a92a9052a21",
+      "requirement": "In all Simformers, the random Gaussian Fourier embedding used for diffusion time has 256 dimensions",
+      "checklist_ids": [
+        "task_003_check_004"
+      ]
+    },
+    {
+      "rubric_id": "85db9bf8-1b9c-4d82-8b53-1813b1d31b3a",
+      "requirement": "In all Simformers, the feed-forward block expands to a hidden dimension of 150.",
+      "checklist_ids": [
+        "task_003_check_003"
+      ]
+    },
+    {
+      "rubric_id": "b18e9e5a-0079-420f-9222-4380004418ef",
+      "requirement": "In all Simformers, a batch size of 1000 is used",
+      "checklist_ids": [
+        "task_012_check_003"
+      ]
+    },
+    {
+      "rubric_id": "831ca2ca-49a9-46c0-a63a-a39c877050a5",
+      "requirement": "The Adam optimizer is used to train all Simformers",
+      "checklist_ids": [
+        "task_012_check_003"
+      ]
+    },
+    {
+      "rubric_id": "7ec03b27-0737-4e4a-9581-bc4720744a1a",
+      "requirement": "Variance Exploding SDE (VESDE) is used to train the Simformer in all experiments",
+      "checklist_ids": [
+        "task_012_check_003",
+        "task_013_check_001"
+      ]
+    },
+    {
+      "rubric_id": "237efc4f-17f7-4078-b987-802bebdefa43",
+      "requirement": "Simformers used for all experiments in Section 4.1 have 6 layers",
+      "checklist_ids": [
+        "task_003_check_003",
+        "task_013_check_001"
+      ]
+    },
+    {
+      "rubric_id": "aa888ef9-bcd4-429d-801b-c0ec0b989e57",
+      "requirement": "The Simformer used for all experiments in Section 4.2 has 8 layers",
+      "checklist_ids": [
+        "task_003_check_003",
+        "task_014_check_001"
+      ]
+    },
+    {
+      "rubric_id": "a0b66551-0aea-443f-8936-bc8db21c949b",
+      "requirement": "The Simformer used for all experiments in Section 4.3 has 8 layers",
+      "checklist_ids": [
+        "task_003_check_003",
+        "task_015_check_001"
+      ]
+    },
+    {
+      "rubric_id": "e0c85d33-977f-4839-b149-312cdfcd5b34",
+      "requirement": "The Simformer used in Section 4.3 uses the dense attention mask",
+      "checklist_ids": [
+        "task_015_check_001"
+      ]
+    },
+    {
+      "rubric_id": "4dce6753-f211-4e45-9f86-152ab3367ccb",
+      "requirement": "The Simformer used for all experiments in Section 4.4 has 8 layers",
+      "checklist_ids": [
+        "task_003_check_003",
+        "task_016_check_001"
+      ]
+    },
+    {
+      "rubric_id": "c9544022-72fb-4e87-977f-84731c412783",
+      "requirement": "The Simformer used in Section 4.4 uses the dense attention mask",
+      "checklist_ids": [
+        "task_016_check_001"
+      ]
+    },
+    {
+      "rubric_id": "fa934dce-6547-475e-b231-8206c35d596d",
+      "requirement": "An observation interval is defined for the energy consumption within the lowsest 10% quantile of posterior predictives",
+      "checklist_ids": [
+        "task_016_check_003"
+      ]
+    }
+  ],
+  "semantic_tags": {
+    "environment": "task_001_check_001",
+    "config": "task_001_check_002",
+    "ve_coeff": "task_002_check_001",
+    "ve_kernel": "task_002_check_002",
+    "time_range": "task_002_check_003",
+    "vp_optional": "task_002_check_004",
+    "weighted_score": "task_002_check_005",
+    "em": "task_002_check_006",
+    "clamp": "task_002_check_007",
+    "encoder": "task_003_check_001",
+    "heads": "task_003_check_002",
+    "ff_depth": "task_003_check_003",
+    "time_features": "task_003_check_004",
+    "time_blocks": "task_003_check_005",
+    "mask_application": "task_003_check_006",
+    "identifiers": "task_004_check_001",
+    "value_repeat": "task_004_check_002",
+    "metadata": "task_004_check_003",
+    "condition_vector": "task_004_check_004",
+    "concatenation": "task_004_check_005",
+    "mask_distribution": "task_004_check_006",
+    "functional_tokens": "task_004_check_007",
+    "graph_init": "task_005_check_001",
+    "graph_candidates": "task_005_check_002",
+    "graph_elimination": "task_005_check_003",
+    "graph_output": "task_005_check_004",
+    "mask_benchmarks": "task_005_check_005",
+    "mask_tree_hmm": "task_005_check_006",
+    "constraint": "task_006_check_001",
+    "denoise": "task_006_check_002",
+    "guidance_sign": "task_006_check_003",
+    "recurrence": "task_006_check_004",
+    "guidance_clamp": "task_006_check_005",
+    "gaussian": "task_007_check_001",
+    "mixture": "task_007_check_002",
+    "moons": "task_007_check_003",
+    "slcp": "task_007_check_004",
+    "tree": "task_007_check_005",
+    "hmm": "task_007_check_006",
+    "logjoint": "task_007_check_007",
+    "chains": "task_007_check_008",
+    "slice": "task_007_check_009",
+    "moons_protocol": "task_007_check_010",
+    "slcp_protocol": "task_007_check_011",
+    "hmc": "task_007_check_012",
+    "endpoints": "task_007_check_013",
+    "lv_prior": "task_008_check_001",
+    "lv_observe": "task_008_check_002",
+    "lv_mask": "task_008_check_003",
+    "lv_reference": "task_008_check_004",
+    "sird_ode": "task_009_check_001",
+    "sird_global": "task_009_check_002",
+    "sird_gp": "task_009_check_003",
+    "sird_noise": "task_009_check_004",
+    "sird_function": "task_009_check_005",
+    "hh_setup": "task_010_check_001",
+    "hh_rates": "task_010_check_002",
+    "hh_integrate": "task_010_check_003",
+    "hh_features": "task_010_check_004",
+    "energy_trace": "task_010_check_005",
+    "energy_units": "task_010_check_006",
+    "energy_scalar": "task_010_check_007",
+    "sbi_methods": "task_011_check_001",
+    "sbi_train": "task_011_check_002",
+    "sbi_early_stop": "task_011_check_003",
+    "sbi_sampling": "task_011_check_004",
+    "train_masks": "task_012_check_001",
+    "train_noise_loss": "task_012_check_002",
+    "train_optimizer": "task_012_check_003",
+    "inference_path": "task_012_check_004",
+    "c2st": "task_012_check_005",
+    "c2st_target": "task_012_check_006",
+    "fig4a": "task_013_check_001",
+    "ten_observations": "task_013_check_002",
+    "fig4b": "task_013_check_003",
+    "benchmark_results": "task_013_check_004",
+    "lv_configs": "task_014_check_001",
+    "lv_cases": "task_014_check_002",
+    "lv_grid": "task_014_check_003",
+    "lv_compare": "task_014_check_004",
+    "sird_dense": "task_015_check_001",
+    "sird_case_a": "task_015_check_002",
+    "sird_case_b": "task_015_check_003",
+    "sird_predict": "task_015_check_004",
+    "hh_dense": "task_016_check_001",
+    "hh_unconstrained": "task_016_check_002",
+    "energy_quantile": "task_016_check_003",
+    "hh_guided": "task_016_check_004",
+    "hh_comparison": "task_016_check_005",
+    "final_figures": "task_017_check_001",
+    "integration": "task_017_check_002",
+    "reproduce": "task_017_check_003",
+    "no_run_gate": "task_017_check_004"
+  }
+}
+

@@ -1,0 +1,44 @@
+FROM rust:1.95.0-bookworm AS codex-builder
+ARG BUILD_JOBS=1
+ENV CARGO_BUILD_JOBS=${BUILD_JOBS} CARGO_PROFILE_DEV_DEBUG=0 CARGO_INCREMENTAL=0
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config libssl-dev libcap-dev clang cmake make g++ protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src/codex
+COPY codex/ ./
+WORKDIR /src/codex/codex-rs
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/src/codex/codex-rs/target \
+    cargo +1.95.0 build --locked -p codex-app-server --bin codex-app-server \
+    && mkdir -p /opt/codex-built \
+    && cp target/debug/codex-app-server /opt/codex-built/codex-app-server
+
+FROM pb-env:latest
+USER root
+ENV PYTHONUNBUFFERED=1 PYTHONNOUSERSITE=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-venv git ca-certificates curl libssl3 libcap2 bubblewrap \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=codex-builder /opt/codex-built/codex-app-server /opt/codex/bin/codex-app-server
+RUN curl -fsSL --retry 3 \
+    https://github.com/openai/codex/releases/download/rust-v0.162.1/codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz \
+    -o /tmp/codex-code-mode-host.tar.gz \
+    && echo '458239ea45c1fc508d89695f180ab352f2834709a8a46929a4466f4f04399ada  /tmp/codex-code-mode-host.tar.gz' | sha256sum -c - \
+    && tar -xzf /tmp/codex-code-mode-host.tar.gz -C /opt/codex/bin \
+    && mv /opt/codex/bin/codex-code-mode-host-x86_64-unknown-linux-musl /opt/codex/bin/codex-code-mode-host \
+    && chmod 755 /opt/codex/bin/codex-code-mode-host \
+    && rm /tmp/codex-code-mode-host.tar.gz
+# arg0 helper dispatch lives in the standalone binary as patched in this repo.
+RUN ln -s codex-app-server /opt/codex/bin/codex-linux-sandbox \
+    && ln -s codex-app-server /opt/codex/bin/apply_patch \
+    && python3 -m venv /opt/codex-venv
+ENV PATH=/opt/codex-venv/bin:/opt/codex/bin:${PATH}
+WORKDIR /opt/codex-config
+COPY requirements.txt ./
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
+COPY controller.py app_server.py tool_schemas.py ./
+COPY protocol/ ./protocol/
+COPY runtime_config.py docker_runtime.py ./
+RUN mkdir -p /home /run-output /run-input /skills /run-auth
+ENTRYPOINT ["python3", "/opt/codex-config/controller.py"]

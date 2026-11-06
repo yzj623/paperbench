@@ -1,0 +1,17 @@
+.codex-auth/
+.codex/
+auth.json
+.env
+.env.*
+*.env
+.grader.env
+.venv*/
+.build-tools/
+reference-schema/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+build/
+runs/
+monitor/logs/
+codex/codex-rs/target/

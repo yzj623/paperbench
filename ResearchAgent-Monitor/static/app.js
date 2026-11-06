@@ -1,0 +1,22 @@
+const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const duration=s=>{s=Math.max(0,+s||0);return `${Math.floor(s/3600)} 小时 ${Math.floor(s%3600/60)} 分钟`};
+async function get(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error(r.status);return r.json()}
+const stat=(n,v)=>`<div class="stat"><span>${esc(n)}</span><strong>${esc(v??0)}</strong></div>`;
+
+function evaluationStats(evaluation = {}) {
+  const score = evaluation.score_percent;
+  return [
+    stat('CodeDev 评分', typeof score === 'number' && Number.isFinite(score) ? `${score.toFixed(2)}%` : '尚无结果'),
+    stat('评分状态', evaluation.label || '尚未评分'),
+    stat('评分记录', evaluation.reports?.length || 0),
+    stat('异常评分项', Number.isInteger(evaluation.invalid_leaf_nodes) ? evaluation.invalid_leaf_nodes : '未报告'),
+  ];
+}
+
+function renderState(d){const r=d.run,p=d.protocol||{};if(!r)return;$('#live').textContent=r.running?'运行中':r.phase;$('#live').className=`status ${r.running?'on':'off'}`;$('#run-line').textContent=`${r.paper_id} · ${r.phase} · 已运行 ${duration(r.elapsed_seconds)} · 最近事件 ${r.last_event_bj||'暂无'}`;$('#stats').innerHTML=[stat('子任务',d.tasks?.length),stat('Agent 当前隐藏',d.hidden_task_count),stat('提交子任务',p.submit_task_calls),stat('通过',p.submit_passed),stat('拒绝',p.submit_rejected),stat('跳过任务',p.skip_task_calls),stat('最终提交',p.final_submit_calls),...evaluationStats(d.evaluation)].join('');$('#tasks').innerHTML=(d.tasks||[]).map(t=>{const skills=(t.skill_ids||[]).map(id=>esc(id.split('/').pop()));return `<article class="task ${t.hidden_from_agent?'task-hidden':''}"><div class="task-head"><h3>${esc(t.task_id)} · ${esc(t.name)}</h3><span class="badge ${t.hidden_from_agent?'hidden':esc(t.status)}">${t.hidden_from_agent?'已向 Agent 隐藏':esc(t.status)}</span></div><p>${esc(t.description)}</p><div class="task-meta">匹配 Skill：${skills.length?skills.join('、'):'无'} · Agent 可见性：${t.hidden_from_agent?'隐藏':'可见'} · 提交次数：${t.submit_attempts||0} · Checker：${esc(t.checker_result||'尚无结论')}</div>${t.checker_reason?`<div class="checker-note">${esc(t.checker_reason)}</div>`:''}</article>`}).join('')||'<div class="empty">大纲尚未生成</div>'}
+function renderMain(d){const e=(d.events||[]).slice().reverse();$('#main-trace').innerHTML=e.length?e.map(x=>`<article class="event"><div class="event-head"><span class="event-title">${esc(x.tool||x.event)}</span><span class="time">${esc(x.time_bj||x.timestamp||'')}</span></div>${x.task_id?`<div class="task-meta">${esc(x.task_id)}</div>`:''}${x.paths?.length?`<div class="paths">${x.paths.map(esc).join('<br>')}</div>`:''}<div class="summary">${esc(x.summary||'')}</div></article>`).join(''):'<div class="empty">尚无 Main Agent 轨迹</div>'}
+const section=(n,v)=>v?`<div class="attempt-section"><b>${esc(n)}</b><pre>${esc(v)}</pre></div>`:'';
+function renderChecker(d){const a=(d.attempts||[]).slice().reverse();$('#checker-trace').innerHTML=a.length?a.map(x=>`<article class="attempt"><div class="attempt-head"><h3>${esc(x.task_id)} · ${esc(x.task_name||'未知任务')} · 第 ${esc(x.attempt)} 次</h3><span class="time">${esc(x.started_bj||x.started||'')}</span></div><div class="task-meta"><span class="badge ${esc(x.result||'uncompleted')}">${esc(x.result||'检查中')}</span>${x.duration_seconds!=null?` · ${esc(x.duration_seconds)} 秒`:''}${x.format_error?' · 格式错误':''}</div>${section('主 Agent 提交说明',x.reproduction_description)}${section(`读取路径（${x.reads?.length||0}）`,(x.reads||[]).join('\n'))}${section('Checker 结论',x.reason)}${section('拒绝问题',x.issues?.length?JSON.stringify(x.issues,null,2):'')}${section('异常或重试',x.error)}</article>`).join(''):`<div class="empty">${esc(d.message||'尚未调用 Checker')}</div>`}
+const configLabels={'planner-no-checker':'Planner，无 Checker','planner-checker':'Planner + Checker','planner-checker-skill':'RA-Skill'};
+async function refresh(){try{const [s,m,c]=await Promise.all([get('/api/state'),get('/api/trace?role=main'),get('/api/trace?role=checker')]);renderState(s);if(s.run?.config)$('#run-line').textContent+=` · 配置：${configLabels[s.run.config]||s.run.config}`;renderMain(m);renderChecker(c)}catch(e){$('#live').textContent='连接异常';$('#live').className='status off'}}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button,.trace').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.role+'-trace').classList.add('active')});refresh();setInterval(refresh,2000);

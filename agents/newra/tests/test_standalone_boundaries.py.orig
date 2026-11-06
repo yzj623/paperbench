@@ -1,0 +1,136 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+def test_role_configs_are_independent() -> None:
+    from research_agent.api_settings import APISettings
+
+    settings = APISettings(model="gpt-4.1-mini")
+    planner = settings.new_config(basicagent_tools=[])
+    main = settings.new_config(basicagent_tools=[])
+
+    assert planner is not main
+    assert planner.basicagent_tools is not main.basicagent_tools
+    planner.basicagent_tools.append(object())
+    assert main.basicagent_tools == []
+
+
+def test_glm47flash_role_configs_are_independent_chat_configs() -> None:
+    from research_agent.api_settings import APISettings
+    from research_agent.glm_completer import (
+        GLM47FLASH_BASE_URL,
+        GLM47FlashTurnCompleterConfig,
+    )
+
+    settings = APISettings.from_config(
+        GLM47FlashTurnCompleterConfig(
+            base_url=GLM47FLASH_BASE_URL,
+            context_window=200_000,
+            max_tokens=4096,
+        )
+    )
+    planner = settings.new_config(basicagent_tools=[])
+    main = settings.new_config(basicagent_tools=[])
+
+    assert planner is not main
+    assert planner.provider == "glm47flash"
+    assert planner.context_window == 200_000
+    assert planner.max_tokens == 4096
+    assert planner.basicagent_tools is not main.basicagent_tools
+
+
+def test_ustc_agent_role_configs_are_independent_chat_configs() -> None:
+    from research_agent.api_settings import APISettings
+    from research_agent.ustc_completer import USTCDeepSeekFlashTurnCompleterConfig
+
+    settings = APISettings.from_config(USTCDeepSeekFlashTurnCompleterConfig())
+    planner = settings.new_config(basicagent_tools=[])
+    main = settings.new_config(basicagent_tools=[])
+
+    assert planner is not main
+    assert planner.provider == "ustc-deepseek-flash"
+    assert planner.model == "deepseek-flash"
+    assert planner.base_url == "https://api.llm.ustc.edu.cn/v1"
+    assert planner.api_key_env == "USTC_LLM_API_KEY"
+    assert planner.context_window == 128_000
+    assert planner.basicagent_tools is not main.basicagent_tools
+
+
+def test_qwen37flash_role_configs_disable_thinking() -> None:
+    from research_agent.api_settings import APISettings
+    from research_agent.qwen37flash_completer import Qwen37FlashTurnCompleterConfig
+
+    settings = APISettings.from_config(Qwen37FlashTurnCompleterConfig())
+    planner = settings.new_config(basicagent_tools=[])
+    main = settings.new_config(basicagent_tools=[])
+
+    assert planner is not main
+    assert planner.provider == "qwen37flash"
+    assert planner.model == "qwen3.7-flash"
+    assert planner.base_url == "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    assert planner.api_key_env == "DASHSCOPE_API_KEY"
+    assert planner.context_window == 1_000_000
+    assert planner.thinking == "disabled"
+    assert planner.basicagent_tools is not main.basicagent_tools
+
+
+def test_virtual_submission_path_maps_inside_root(tmp_path: Path) -> None:
+    from research_agent.runtime_tools import WorkspaceWriteFileTool
+    from research_agent.state_machine import ResearchToolError
+
+    root = tmp_path / "submission"
+    root.mkdir()
+    tool = WorkspaceWriteFileTool(submission_root=root)
+
+    assert tool._resolve_target("/home/submission/src/model.py") == root / "src/model.py"
+    assert tool._resolve_target("/submission/README.md") == root / "README.md"
+    with pytest.raises(ResearchToolError, match="submission directory"):
+        tool._resolve_target("/etc/passwd")
+
+
+def test_docker_computer_keeps_controller_and_task_paths_separate(tmp_path: Path) -> None:
+    from research_agent.runner import DockerComputer
+
+    computer = DockerComputer(container="test-container", workspace=tmp_path)
+    assert computer.resolve_path("/home/paper/paper.md") == (
+        tmp_path / "paper/paper.md"
+    ).resolve().as_posix()
+    assert computer.resolve_path("/tmp/model.bin") == "/tmp/model.bin"
+
+
+def test_prompts_are_paper_generic_and_code_dev_only() -> None:
+    from research_agent import prompts
+
+    text = "\n".join(
+        [
+            prompts.PLANNING_PROMPT,
+            prompts.EXECUTION_PROMPT,
+            prompts.CHECKER_PROMPT,
+        ]
+    ).casefold()
+    for paper_specific in ("mechanistic-understanding", "pinn", "all-in-one"):
+        assert paper_specific not in text
+    assert "code-dev" in text
+
+
+def test_ustc_judge_config_covers_main_and_structured_calls() -> None:
+    from paperbench.judge.simple import ParsedJudgeResponseInt, SimpleJudge
+    from research_agent.ustc_judge import (
+        USTCDeepSeekFlashJudgeCompleterConfig,
+        install_ustc_structured_judge_config,
+    )
+
+    install_ustc_structured_judge_config()
+    root = USTCDeepSeekFlashJudgeCompleterConfig()
+    judge = object.__new__(SimpleJudge)
+    judge.completer_config = root
+    structured_config, structured = judge._init_structured_completer(
+        None, ParsedJudgeResponseInt
+    )
+
+    assert structured_config.model == "deepseek-flash"
+    assert structured_config.response_format == {"type": "json_object"}
+    assert structured.model == "deepseek-flash"
+    assert structured.n_ctx == 128_000

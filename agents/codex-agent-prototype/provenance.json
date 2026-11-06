@@ -1,0 +1,23 @@
+{
+  "codex_upstream_commit": "12cca49c81c8aa6a37a5cc4e39964ee3b70f9458",
+  "protocol_snapshot": "Copied locally from the existing Pi adaptation; no runtime imports from it",
+  "codex_prompt_sha256": "09a0d2803fc50b03075369f24d9a28e9e8649a55ecba0f07b11e9e701856690b",
+  "protocol_sha256": {
+    "plan.py": "81427dacde71218730e0184f2016601177144cbaf2f34bc495d1c253b7002aa8",
+    "state_machine.py": "81c4893cd9b2a5c5aa87468540a1c0242e6ae89a646f48c4f87e518d57a734ec",
+    "prompts.py": "09a0d2803fc50b03075369f24d9a28e9e8649a55ecba0f07b11e9e701856690b",
+    "readonly.py": "22a1fb1d09d45ae47bc24d1ede544045d39569a8ce9157333b95967963c22a01",
+    "storage.py": "6470925e589de9b7268abd96a1e259dab51b087724bffd1a1133ab302cc5eb96",
+    "async_jobs.py": "a3c920bed314dcdb005158a4257b8fd37b8764d592ee75a96304ecca8bfbbda3"
+  },
+  "complete_skill_counts": {
+    "mechanistic-understanding": 23,
+    "all-in-one": 28,
+    "stochastic-interpolants": 44
+  },
+  "agent_auth": "Not copied; no ChatGPT login performed during implementation",
+  "grading": "Local copied scorer and private .grader.env; official PaperBench and common packages are vendored under vendor/paperbench-official",
+  "local_modifications": [
+    "Optional --no-checker mode: submit_subtask is accepted directly after protocol validation; the Pi protocol snapshot is otherwise retained."
+  ]
+}

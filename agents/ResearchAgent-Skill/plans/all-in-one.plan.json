@@ -1,0 +1,89 @@
+{
+  "subtasks": [
+    {
+      "id": "task_001",
+      "name": "Project scaffolding and configuration management",
+      "description": "Set up the project structure under /home/submission/ with all necessary Python files, configuration management via Hydra for tracking hyperparameters, and requirements specification. Implement resource inspection utilities to verify available hardware. Create a reproduce.sh script that orchestrates all experiments. This subtask establishes the foundational infrastructure without implementing any domain-specific logic."
+    },
+    {
+      "id": "task_002",
+      "name": "Diffusion model core VESDE and VPSDE SDEs with score matching",
+      "description": "Implement the core diffusion model machinery including Variance Exploding SDE and Variance Preserving SDE formulations. Implement the forward diffusion process that transforms data into noise according to the specified SDE drift and diffusion coefficients. Implement the reverse SDE solver using Euler-Maruyama discretization for sampling. Implement denoising score matching loss computation, including the time-dependent weighting function. Include Gaussian Fourier embedding for diffusion time encoding and linear projection added to each feed-forward block output as specified in the addendum."
+    },
+    {
+      "id": "task_003",
+      "name": "Transformer architecture with attention masks",
+      "description": "Implement the transformer backbone for the Simformer. The transformer uses token dimension fifty, random Gaussian Fourier embedding for time with dimension one hundred twenty-eight, multiple layers, multiple attention heads, attention size ten, and widening factor three for the feed-forward hidden dimension. Implement multi-head self-attention with configurable attention masks M_E. Add linear projection to the output of each feed-forward block. Support both directed and undirected attention masks."
+    },
+    {
+      "id": "task_004",
+      "name": "Tokenizer for simulation-based inference variables",
+      "description": "Implement the tokenizer that converts parameters and data into transformer-compatible tokens. Each variable becomes a token comprising an identifier embedding unique to each variable, a value embedding created by repeating the scalar value to match the desired dimensionality, optional metadata embeddings such as random Fourier embeddings for function-valued parameters, and a condition state embedding where True values are projected via learnable embeddings and False values are projected to zeros. Concatenate these embeddings in order. Handle both parametric finite-dimensional and nonparametric function-valued variables. Support conditional mask resampling during training where M_C is uniformly sampled from joint, posterior, likelihood, rand_mask1 with Bernoulli probability point-three, and rand_mask2 with Bernoulli probability point-seven options."
+    },
+    {
+      "id": "task_005",
+      "name": "Graph inversion algorithm for attention mask adaptation",
+      "description": "Implement the Graph Inversion algorithm by Webb et al. to dynamically adapt the directed attention mask M_E based on conditioning. Given a joint Bayesian network structure G as the base mask M_E and latent variables Z defined by condition mask M_C, the algorithm moralizes the graph, performs min-fill elimination ordering, and returns additional edges H that must be added to M_E to faithfully represent dependencies for the given conditioning. The final attention mask combines the base mask with the inverted edges. This enables the Simformer to correctly model arbitrary conditionals from a single trained model."
+    },
+    {
+      "id": "task_006",
+      "name": "Guided diffusion for interval conditioning",
+      "description": "Implement guided diffusion to enable conditioning on observation intervals rather than exact values. Use the general formulation where the guided score equals the base score plus the gradient of log sigmoid applied to scaling function times constraint function. The scaling function is inversely proportional to variance. The constraint function defines inequality constraints. Implement the self-recurrence predictor-corrector scheme with configurable recurrence steps, gradient computation of constraint function through sigmoid guidance, and proper handling of the reverse SDE integration. Support multiple simultaneous constraints."
+    },
+    {
+      "id": "task_007",
+      "name": "Simulation-based inference benchmark tasks",
+      "description": "Implement all five benchmark simulators from Lueckmann et al.: Gaussian Linear with prior and data distributions in R^10; Two Moons with uniform prior and data generated from polar coordinates producing bimodal posteriors; Gaussian Mixture with uniform prior and data from mixture of two Gaussians with different covariances; SLCP with uniform prior, data from bivariate normals with theta-dependent means and covariances in R^5 and R^8; Tree with hierarchical normal priors and nonlinear observation functions producing multimodal posteriors. Implement the reference posterior generation procedures using slice sampling and MCMC for each task."
+    },
+    {
+      "id": "task_008",
+      "name": "Lotka-Volterra simulator with unstructured observations",
+      "description": "Implement the Lotka-Volterra predator-prey ODE simulator. Parameters alpha, beta, gamma, delta are sigmoid-transformed Normal distributed in range one to three. Solve coupled ODEs with Gaussian observation noise. Support unstructured and irregularly sampled observations at user-specified time points. Generate synthetic observations with varying numbers of prey and predator measurements placed irregularly in time. For the application experiment, infer posterior distributions on a uniform grid. Implement the dynamic attention mask that depends on which time points are observed for prey versus predator populations, with Markovian structure within each population type and causal cross-dependency from past predator to current prey."
+    },
+    {
+      "id": "task_009",
+      "name": "SIRD epidemiological model with time-dependent contact rate",
+      "description": "Implement the SIRD Susceptible-Infected-Recovered-Deceased epidemiological simulator with time-varying contact rate. Global parameters gamma recovery and mu mortality follow Uniform priors. Time-dependent contact rate beta(t) is sampled from a Gaussian process with RBF kernel transformed via sigmoid to ensure beta(t) in zero to one. Solve the coupled ODEs for S, I, R, D compartments. Add log-normal observation noise. Support functional infinite-dimensional parameter inference for the time-dependent contact rate using subsampling at random time points. Demonstrate parameter-conditioned posterior inference with partial parameter measurements."
+    },
+    {
+      "id": "task_010",
+      "name": "Hodgkin-Huxley neural simulator with summary statistics and energy",
+      "description": "Implement the Hodgkin-Huxley neuron model following Pospischil et al. Initial membrane voltage negative sixty-five mV, simulate over two hundred ms with input current four mA applied between fifty ms and one hundred fifty ms. Implement the rate functions for m, h, n gates. Solve the full HH differential equations for V, m, h, n gates plus energy accumulation. Compute sodium charge-based energy consumption using the exact formula from the addendum with all conversion factors including mS to S, mV to V, membrane area, elementary charge, valence, three Na per ATP, ATP energy, divided by point-two for J/s, multiplied by one million for uJ/s. Extract seven summary statistics: spike count, mean resting potential, std resting potential, mean spiking potential, second central moment variance, third central moment, fourth central moment of voltage during the spiking domain. Add energy consumption as an additional statistic."
+    },
+    {
+      "id": "task_011",
+      "name": "Baseline implementations NPE NRE NLE via SBI library",
+      "description": "Implement baseline methods Neural Posterior Estimation NPE, Neural Ratio Estimation NRE, and Neural Likelihood Estimation NLE using the sbi Python library as required by the addendum. Use default parameters from sbi but configure NPE and NLE to use neural spline flow instead of the default density estimator. Train each baseline with batch size one thousand and Adam optimizer, stopping on convergence via early stopping based on validation loss. These baselines serve as comparison targets for the Simformer on all benchmark tasks."
+    },
+    {
+      "id": "task_012",
+      "name": "Training loop and evaluation pipeline",
+      "description": "Implement the complete training loop for the Simformer. For each training batch: sample parameters and generate simulated data via the appropriate simulator; construct the joint sequence of parameters and data; randomly sample a condition mask M_C from the five specified options; apply graph inversion if needed to compute the adapted attention mask M_E; tokenize the data; add noise at a random diffusion time; compute the denoising score matching loss masked by one minus M_C; backpropagate and update. Training batch size one thousand, Adam optimizer. Implement the evaluation pipeline: generate test simulations; run the Simformer to sample from target conditionals using the reverse SDE with five hundred Euler-Maruyama steps default; compute C2ST accuracy using a random forest classifier with one hundred trees to compare Simformer samples against ground-truth reference posteriors."
+    },
+    {
+      "id": "task_013",
+      "name": "Benchmark experiment orchestration and result collection",
+      "description": "Orchestrate and execute the main benchmark experiments described in Section four point one. For each of the four standard benchmark tasks Gaussian Linear, Two Moons, Gaussian Mixture, SLCP, train the Simformer with varying simulation budgets one thousand, ten thousand, one hundred thousand. Evaluate C2ST performance against ground-truth posteriors for ten reference posteriors per task. Compare Simformer variants dense attention, undirected structured attention, directed structured attention against NPE baseline. Also evaluate on the Tree and HMM tasks for arbitrary conditional distributions. Collect and organize all quantitative results."
+    },
+    {
+      "id": "task_014",
+      "name": "Application experiment Lotka-Volterra unstructured observations",
+      "description": "Execute the application experiment described in Section four point two. Train the Simformer on the Lotka-Volterra simulator with one hundred thousand simulations. Generate synthetic unstructured observations: first scenario with four irregularly-spaced prey population measurements; second scenario adding nine additional irregularly-spaced predator measurements. Infer posterior distributions for both scenarios. Generate posterior predictive samples using the Simformer ability to sample arbitrary conditionals. Compute C2ST performance for both the posterior distribution and arbitrary conditionals. Visualize posterior predictive distributions and posterior marginals compared to ground truth."
+    },
+    {
+      "id": "task_015",
+      "name": "Application experiment SIRD infinite-dimensional parameter inference",
+      "description": "Execute the application experiment described in Section four point three. Train the Simformer on the SIRD simulator with time-dependent contact rate beta(t) modeled as a Gaussian process. Use subsampling at random time points to handle the infinite-dimensional parameter space. Generate synthetic observations of infected, recovered, and deceased populations at irregular time points. Infer the posterior distribution for global parameters gamma, mu and the time-dependent contact rate. Demonstrate parameter-conditioned posterior inference with partial parameter measurements. Generate posterior predictive samples."
+    },
+    {
+      "id": "task_016",
+      "name": "Application experiment Hodgkin-Huxley with guided diffusion",
+      "description": "Execute the application experiment described in Section four point four. Train the Simformer on the Hodgkin-Huxley simulator with summary statistics and energy consumption. First, infer the posterior distribution given only voltage summary statistics. Generate posterior predictive samples for energy consumption. Then, define an observation interval constraint requiring energy to be within the lowest ten percent quantile of posterior predictives. Use guided diffusion to infer the constrained posterior. Generate posterior predictive samples from the constrained posterior and verify energy consumption falls below the threshold. Verify voltage traces remain consistent with observations."
+    },
+    {
+      "id": "task_017",
+      "name": "Visualization documentation and final submission packaging",
+      "description": "Create comprehensive visualizations for all experiments: C2ST bar charts comparing Simformer variants and baselines on benchmark tasks, posterior distribution plots for Lotka-Volterra, SIRD posterior for global and time-dependent parameters, Hodgkin-Huxley posterior and energy-constrained results. Write README.md documenting the reproduction status, what was implemented, how to run each experiment, and how the codebase relates to paper sections. Create reproduce.sh that orchestrates all experiments end-to-end. Perform lightweight syntax import startup validation checks. Package everything for submission under /home/submission/. This is the final subtask that creates README.md and reproduce.sh, performs final validation, and completes submission packaging."
+    }
+  ]
+}

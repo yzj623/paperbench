@@ -1,0 +1,7 @@
+.venv/
+.venv-wsl/
+.pytest_cache/
+__pycache__/
+*.pyc
+.env
+.openai-oauth/

@@ -1,0 +1,255 @@
+{
+  "execution_prompt_sha256": "b1c0aef2228f7d2b0a3cb4a2a6acbd1998904e36b60cea1a14b096f68d14c8ae",
+  "planning_prompt_sha256": "58191832e1e9f5e9d2d8857c345cfa66aa716c004475794994d61a569dcfe57d",
+  "tools": [
+    {
+      "type": "function",
+      "name": "write_file",
+      "description": "Create or completely replace one UTF-8 source, configuration, script, or text file under the task submission directory. The path is validated, while content is treated as opaque text and is never interpreted as a filesystem path. Parent directories are created automatically.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "A real absolute path below the task submission directory, or a path relative to that directory."
+          },
+          "content": {
+            "type": "string",
+            "description": "The complete UTF-8 file content to write."
+          }
+        },
+        "required": [
+          "path",
+          "content"
+        ],
+        "additionalProperties": false
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "run_background",
+      "description": "Start a long-running task with an exec-style argv vector and return immediately. Output is redirected to the requested task-local log file.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "argv": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "cwd": {
+            "type": "string"
+          },
+          "env": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "log_path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "argv",
+          "cwd",
+          "log_path"
+        ],
+        "additionalProperties": false
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "job_status",
+      "description": "Inspect one managed background job, or list all managed jobs.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "job_log",
+      "description": "Read a bounded tail of one managed background job's log.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "tail_lines": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "additionalProperties": false
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "job_kill",
+      "description": "Stop one managed background job by job_id after identity validation.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "additionalProperties": false
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "skip_subtask",
+      "description": "Temporarily defer a genuinely impossible subtask only after it has received at least three valid Check Agent rejections. Earlier calls leave it uncompleted.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subtask_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subtask_id",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "submit_subtask",
+      "description": "Submit one subtask to a fresh stateless Check Agent.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subtask_id": {
+            "type": "string"
+          },
+          "reproduction_description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subtask_id",
+          "reproduction_description"
+        ],
+        "additionalProperties": false
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "final_submit",
+      "description": "Finish only when every subtask is completed or validly skipped and all required files and process gates are ready. Uncompleted tasks are always rejected. If skipped tasks remain, the first otherwise-valid call asks for confirmation and a later call confirms evaluation with skipped work.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  ],
+  "state_machine_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "skip_subtask",
+        "description": "Legacy compatibility tool. Its rejection-count gate cannot normally be reached when subtask submissions are accepted directly.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subtask_id": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "subtask_id",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "submit_subtask",
+        "description": "Submit the current subtask and mark it completed directly after protocol validation succeeds.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subtask_id": {
+              "type": "string"
+            },
+            "reproduction_description": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "subtask_id",
+            "reproduction_description"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "final_submit",
+        "description": "Finish only when every subtask is completed or validly skipped and all hard gates pass. Uncompleted tasks are always rejected. If skipped tasks remain, the first otherwise-valid call asks for confirmation and a later call confirms evaluation with skipped work.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "plan_views": [
+    {
+      "role": "user",
+      "content": "Latest frozen reproduction plan and runtime statuses:\n{\n  \"subtasks\": [\n    {\n      \"id\": \"task_001\",\n      \"name\": \"name_1\",\n      \"description\": \"scope_1\",\n      \"status\": \"uncompleted\"\n    }\n  ]\n}\n\nOnly the currently visible portion of the frozen plan is shown. There are 2 later subtasks hidden from view. They will be revealed one at a time after the current subtask is submitted or validly skipped."
+    },
+    {
+      "role": "user",
+      "content": "Latest frozen reproduction plan and runtime statuses:\n{\n  \"subtasks\": [\n    {\n      \"id\": \"task_001\",\n      \"name\": \"name_1\",\n      \"description\": \"scope_1\",\n      \"status\": \"completed\"\n    },\n    {\n      \"id\": \"task_002\",\n      \"name\": \"name_2\",\n      \"description\": \"scope_2\",\n      \"status\": \"uncompleted\"\n    }\n  ]\n}\n\nOnly the currently visible portion of the frozen plan is shown. There are 1 later subtasks hidden from view. They will be revealed one at a time after the current subtask is submitted or validly skipped."
+    },
+    {
+      "role": "user",
+      "content": "Latest frozen reproduction plan and runtime statuses:\n{\n  \"subtasks\": [\n    {\n      \"id\": \"task_001\",\n      \"name\": \"name_1\",\n      \"description\": \"scope_1\",\n      \"status\": \"completed\"\n    },\n    {\n      \"id\": \"task_002\",\n      \"name\": \"name_2\",\n      \"description\": \"scope_2\",\n      \"status\": \"completed\"\n    },\n    {\n      \"id\": \"task_003\",\n      \"name\": \"name_3\",\n      \"description\": \"scope_3\",\n      \"status\": \"uncompleted\"\n    }\n  ]\n}\n\nThe complete frozen plan is now visible. There are no later hidden subtasks."
+    },
+    {
+      "role": "user",
+      "content": "Latest frozen reproduction plan and runtime statuses:\n{\n  \"subtasks\": [\n    {\n      \"id\": \"task_001\",\n      \"name\": \"name_1\",\n      \"description\": \"scope_1\",\n      \"status\": \"completed\"\n    },\n    {\n      \"id\": \"task_002\",\n      \"name\": \"name_2\",\n      \"description\": \"scope_2\",\n      \"status\": \"completed\"\n    },\n    {\n      \"id\": \"task_003\",\n      \"name\": \"name_3\",\n      \"description\": \"scope_3\",\n      \"status\": \"completed\"\n    }\n  ]\n}\n\nThe complete frozen plan is now visible. There are no later hidden subtasks."
+    }
+  ]
+}

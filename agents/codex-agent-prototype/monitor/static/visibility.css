@@ -1,0 +1,13 @@
+.badge.hidden {
+  color: #a9b3c3;
+  border-color: #596579;
+}
+
+.task-hidden {
+  background: #0b121d;
+  opacity: 0.55;
+}
+
+.task-hidden p {
+  color: #8793a5;
+}
